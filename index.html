@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0a1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>PodcastForge — Pro Podcast Editor</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+    <!-- ===== TOP BAR ===== -->
+    <header id="topbar">
+      <div class="topbar-left">
+        <div class="app-logo">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect width="28" height="28" rx="7" fill="url(#lg)"/>
+            <path d="M8 10v8M12 7v14M16 11v6M20 9v10" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+            <defs><linearGradient id="lg" x1="0" y1="0" x2="28" y2="28"><stop stop-color="#6C3AFF"/><stop offset="1" stop-color="#3A8AFF"/></linearGradient></defs>
+          </svg>
+        </div>
+        <div class="project-name" id="projectName">Untitled Episode</div>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn" id="btnOpenFileTop" title="Open File">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </button>
+        <button class="icon-btn" id="btnUndo" title="Undo" disabled>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h10a5 5 0 015 5v2M3 10l4-4M3 10l4 4"/></svg>
+        </button>
+        <button class="icon-btn" id="btnRedo" title="Redo" disabled>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10H11a5 5 0 00-5 5v2M21 10l-4-4M21 10l-4 4"/></svg>
+        </button>
+        <button class="icon-btn" id="btnSettings" title="Settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ===== TIME DISPLAY ===== -->
+    <div id="timeDisplay">
+      <span class="time-current" id="timeCurrent">00:00.000</span>
+      <span class="time-sep">/</span>
+      <span class="time-total" id="timeTotal">00:00.000</span>
+      <div class="loudness-badge" id="loudnessBadge" title="Integrated LUFS">-- LUFS</div>
+    </div>
+
+    <!-- ===== WAVEFORM / TIMELINE AREA ===== -->
+    <div id="timelineArea">
+      <div id="trackHeaders">
+        <!-- Track headers rendered here -->
+      </div>
+      <div id="waveformContainer">
+        <canvas id="waveformCanvas"></canvas>
+        <div id="playhead"></div>
+        <div id="selectionOverlay"></div>
+        <div id="markersOverlay"></div>
+        <!-- Zoom/scroll hint -->
+        <div id="waveformHint" class="hint-overlay">Pinch to zoom · Swipe to scroll · Tap to place cursor</div>
+      </div>
+    </div>
+
+    <!-- ===== ZOOM CONTROLS ===== -->
+    <div id="zoomControls">
+      <button class="sm-btn" id="btnZoomOut" title="Zoom Out">−</button>
+      <input type="range" id="zoomSlider" min="1" max="500" value="50" class="zoom-slider">
+      <button class="sm-btn" id="btnZoomIn" title="Zoom In">+</button>
+      <button class="sm-btn" id="btnZoomFit" title="Fit to View">⊞</button>
+    </div>
+
+    <!-- ===== TRANSPORT BAR ===== -->
+    <div id="transport">
+      <button class="transport-btn" id="btnSkipBack5" title="Back 5s">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>
+        <span class="transport-label">5</span>
+      </button>
+      <button class="transport-btn" id="btnSkipBack1" title="Back 1s">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v16M12 4v16M22 4l-10 8 10 8"/></svg>
+      </button>
+      <button class="transport-btn play-btn" id="btnPlayPause" title="Play">
+        <svg id="iconPlay" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"/></svg>
+        <svg id="iconPause" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>
+      </button>
+      <button class="transport-btn" id="btnSkipFwd1" title="Forward 1s">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v16M12 4v16M2 4l10 8-10 8"/></svg>
+      </button>
+      <button class="transport-btn" id="btnSkipFwd5" title="Forward 5s">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M13 18V6l8.5 6-8.5 6zm-.5-6L4 18V6l8.5 6z"/></svg>
+        <span class="transport-label">5</span>
+      </button>
+      <button class="transport-btn rec-btn" id="btnRecord" title="Record">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="7"/></svg>
+      </button>
+    </div>
+
+    <!-- ===== MAIN TAB CONTENT ===== -->
+    <div id="tabContent">
+      <!-- EFFECTS TAB -->
+      <div class="tab-panel" id="panelEffects">
+        <div class="panel-header">
+          <h2>Voice Processing</h2>
+          <div class="preset-selector">
+            <select id="voicePreset">
+              <option value="clear">Clear Podcast Voice</option>
+              <option value="warm">Warm & Rich</option>
+              <option value="studio">Studio Clean</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+        </div>
+        <div class="chain-list" id="chainList">
+          <!-- Rendered dynamically -->
+        </div>
+        <div class="chain-detail" id="chainDetail">
+          <!-- Shows when a chain step is tapped -->
+        </div>
+      </div>
+
+      <!-- EDIT TAB -->
+      <div class="tab-panel" id="panelEdit">
+        <div class="edit-tools">
+          <button class="tool-btn" id="btnSplit">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="22"/><polyline points="8,6 12,2 16,6"/><polyline points="8,18 12,22 16,18"/></svg>
+            <span>Split</span>
+          </button>
+          <button class="tool-btn" id="btnTrimToSel">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+            <span>Trim</span>
+          </button>
+          <button class="tool-btn" id="btnDelete">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            <span>Delete</span>
+          </button>
+          <button class="tool-btn" id="btnRippleDelete">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+            <span>Ripple Del</span>
+          </button>
+          <button class="tool-btn" id="btnCrossfade">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h6m8 0h6"/><path d="M8 12c0-4 4-8 8-8"/><path d="M8 12c0 4 4 8 8 8"/></svg>
+            <span>X-Fade</span>
+          </button>
+          <button class="tool-btn" id="btnFadeIn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20Q12 20 22 4"/></svg>
+            <span>Fade In</span>
+          </button>
+          <button class="tool-btn" id="btnFadeOut">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4Q12 4 22 20"/></svg>
+            <span>Fade Out</span>
+          </button>
+          <button class="tool-btn" id="btnInsertSilence">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
+            <span>Silence</span>
+          </button>
+          <button class="tool-btn" id="btnDuplicate">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            <span>Duplicate</span>
+          </button>
+          <button class="tool-btn" id="btnHealGap">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h4m4 0h4m4 0"/><circle cx="12" cy="12" r="9"/></svg>
+            <span>Heal Gap</span>
+          </button>
+        </div>
+        <div class="clip-types" id="clipTypes">
+          <h3>Clip Type</h3>
+          <div class="clip-type-grid">
+            <button class="clip-type-btn active" data-type="vocal">🎤 Vocal</button>
+            <button class="clip-type-btn" data-type="cohost">🗣 Co-Host</button>
+            <button class="clip-type-btn" data-type="guest">👤 Guest</button>
+            <button class="clip-type-btn" data-type="remote">📞 Remote</button>
+            <button class="clip-type-btn" data-type="intro">🎵 Intro</button>
+            <button class="clip-type-btn" data-type="outro">🎵 Outro</button>
+            <button class="clip-type-btn" data-type="ad">💰 Ad Insert</button>
+            <button class="clip-type-btn" data-type="sfx">🔊 SFX</button>
+            <button class="clip-type-btn" data-type="music">🎹 Music Bed</button>
+            <button class="clip-type-btn" data-type="tone">🔇 Room Tone</button>
+          </div>
+        </div>
+        <div class="track-controls" id="trackControls">
+          <!-- Track controls rendered here -->
+        </div>
+      </div>
+
+      <!-- DETECT TAB -->
+      <div class="tab-panel" id="panelDetect">
+        <div class="detect-header">
+          <h2>Detect &amp; Review</h2>
+          <p class="detect-subtitle">Find silences &amp; filler words. Mark them for review, then decide what to cut.</p>
+        </div>
+        <div class="detect-actions">
+          <button class="detect-btn primary" id="btnDetectSilence">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h5m4 0h5m4 0"/></svg>
+            <span>Detect Silences</span>
+          </button>
+          <button class="detect-btn primary" id="btnDetectFillers">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            <span>Detect Fillers</span>
+          </button>
+        </div>
+        <div class="detect-settings" id="detectSettings">
+          <div class="detect-setting-group">
+            <label>Silence Threshold (dB)</label>
+            <input type="range" id="silenceThreshold" min="-60" max="-10" value="-40">
+            <span id="silenceThresholdVal">-40</span>
+          </div>
+          <div class="detect-setting-group">
+            <label>Min Silence Duration (s)</label>
+            <input type="range" id="minSilenceDur" min="0.3" max="5" step="0.1" value="0.8">
+            <span id="minSilenceDurVal">0.8</span>
+          </div>
+          <div class="detect-setting-group">
+            <label>Filler Words</label>
+            <div class="filler-tags" id="fillerWordTags">
+              <span class="filler-tag">um</span>
+              <span class="filler-tag">uh</span>
+              <span class="filler-tag">like</span>
+              <span class="filler-tag">you know</span>
+              <span class="filler-tag">so</span>
+              <span class="filler-tag">basically</span>
+              <span class="filler-tag">actually</span>
+              <span class="filler-tag">literally</span>
+              <span class="filler-tag">right</span>
+              <span class="filler-tag">I mean</span>
+            </div>
+          </div>
+        </div>
+        <div class="detect-progress" id="detectProgress" style="display:none">
+          <div class="progress-bar"><div class="progress-fill" id="detectProgressFill"></div></div>
+          <span id="detectProgressText">Analyzing...</span>
+        </div>
+        <div class="marker-list" id="markerList">
+          <div class="marker-empty">No markers yet. Run detection above.</div>
+        </div>
+        <div class="marker-actions" id="markerActions" style="display:none">
+          <button class="marker-action-btn approve-all" id="btnApproveAll">✓ Approve All</button>
+          <button class="marker-action-btn reject-all" id="btnRejectAll">✗ Reject All</button>
+          <button class="marker-action-btn apply-cuts primary" id="btnApplyCuts">✂ Apply Approved Cuts</button>
+        </div>
+      </div>
+
+      <!-- EXPORT TAB -->
+      <div class="tab-panel" id="panelExport">
+        <h2>Export</h2>
+        <div class="export-section">
+          <h3>Format</h3>
+          <div class="export-format-grid">
+            <button class="format-btn active" data-format="wav">WAV<br><small>Master</small></button>
+            <button class="format-btn" data-format="mp3">MP3<br><small>RSS</small></button>
+            <button class="format-btn" data-format="aac">AAC<br><small>RSS</small></button>
+            <button class="format-btn" data-format="flac">FLAC<br><small>Archive</small></button>
+          </div>
+        </div>
+        <div class="export-section">
+          <h3>Quality</h3>
+          <div class="export-row">
+            <label>Sample Rate</label>
+            <select id="exportSampleRate">
+              <option value="48000">48 kHz</option>
+              <option value="44100" selected>44.1 kHz</option>
+            </select>
+          </div>
+          <div class="export-row">
+            <label>Bit Depth</label>
+            <select id="exportBitDepth">
+              <option value="24">24-bit</option>
+              <option value="16">16-bit</option>
+            </select>
+          </div>
+          <div class="export-row">
+            <label>Channels</label>
+            <select id="exportChannels">
+              <option value="1">Mono</option>
+              <option value="2">Stereo</option>
+            </select>
+          </div>
+          <div class="export-row" id="bitrateRow">
+            <label>Bitrate</label>
+            <select id="exportBitrate">
+              <option value="96">96 kbps</option>
+              <option value="128" selected>128 kbps</option>
+              <option value="160">160 kbps</option>
+              <option value="192">192 kbps</option>
+            </select>
+          </div>
+        </div>
+        <div class="export-section">
+          <h3>Loudness Target</h3>
+          <div class="export-loudness-grid">
+            <button class="loudness-btn" data-lufs="-16">-16 LUFS<br><small>Stereo Podcast</small></button>
+            <button class="loudness-btn active" data-lufs="-19">-19 LUFS<br><small>Mono Podcast</small></button>
+            <button class="loudness-btn" data-lufs="-14">-14 LUFS<br><small>Streaming</small></button>
+          </div>
+          <div class="export-row">
+            <label>True Peak Ceiling</label>
+            <select id="exportTruePeak">
+              <option value="-1" selected>-1 dBTP</option>
+              <option value="-2">-2 dBTP</option>
+            </select>
+          </div>
+        </div>
+        <div class="export-section">
+          <h3>Metadata</h3>
+          <div class="export-row"><label>Title</label><input type="text" id="metaTitle" placeholder="Episode Title"></div>
+          <div class="export-row"><label>Artist</label><input type="text" id="metaArtist" placeholder="Podcast Name"></div>
+          <div class="export-row"><label>Episode #</label><input type="text" id="metaEpisode" placeholder="1"></div>
+          <div class="export-row"><label>Year</label><input type="number" id="metaYear" value="2026"></div>
+        </div>
+        <div class="export-section">
+          <h3>Chapters</h3>
+          <div id="chapterList" class="chapter-list">
+            <div class="chapter-empty">Add chapter markers from the timeline to include here.</div>
+          </div>
+          <button class="sm-btn" id="btnAddChapter">+ Add Chapter</button>
+        </div>
+        <button class="export-btn primary" id="btnExport">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export File
+        </button>
+        <div id="exportProgress" style="display:none">
+          <div class="progress-bar"><div class="progress-fill" id="exportProgressFill"></div></div>
+          <span id="exportProgressText">Rendering...</span>
+        </div>
+        <div id="exportReport" class="export-report" style="display:none">
+          <!-- Loudness/peak report -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== BOTTOM TAB BAR ===== -->
+    <nav id="tabBar">
+      <button class="tab-btn active" data-tab="effects">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <span>Effects</span>
+      </button>
+      <button class="tab-btn" data-tab="edit">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <span>Edit</span>
+      </button>
+      <button class="tab-btn" data-tab="detect">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Detect</span>
+      </button>
+      <button class="tab-btn" data-tab="export">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Export</span>
+      </button>
+    </nav>
+
+    <!-- ===== FILE LOAD OVERLAY (shown when no audio loaded) ===== -->
+    <div id="welcomeOverlay">
+      <div class="welcome-content">
+        <div class="welcome-icon">
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+            <rect width="64" height="64" rx="16" fill="url(#wg)"/>
+            <path d="M18 24v16M26 18v28M34 22v20M42 20v24M50 26v12" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+            <defs><linearGradient id="wg" x1="0" y1="0" x2="64" y2="64"><stop stop-color="#6C3AFF"/><stop offset="1" stop-color="#3A8AFF"/></linearGradient></defs>
+          </svg>
+        </div>
+        <h1>PodcastForge</h1>
+        <p>Pro podcast editor — clean voices, fast edits, platform-safe exports.</p>
+        <div class="welcome-actions">
+          <button class="welcome-btn primary" id="btnOpenFile">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+            Open Audio File
+          </button>
+          <button class="welcome-btn" id="btnRecordNew">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/></svg>
+            Record New
+          </button>
+        </div>
+        <p class="welcome-hint">Supports WAV, MP3, AAC, FLAC, OGG, M4A</p>
+        <input type="file" id="fileInput" accept="audio/*" style="display:none" multiple>
+      </div>
+    </div>
+
+    <!-- ===== SETTINGS MODAL ===== -->
+    <div class="modal-overlay" id="settingsModal" style="display:none">
+      <div class="modal">
+        <div class="modal-header"><h2>Settings</h2><button class="modal-close" id="closeSettings">✕</button></div>
+        <div class="modal-body">
+          <div class="setting-row"><label>Recording Sample Rate</label><select id="recSampleRate"><option value="48000">48 kHz</option><option value="44100">44.1 kHz</option></select></div>
+          <div class="setting-row"><label>Recording Bit Depth</label><select id="recBitDepth"><option value="24">24-bit</option><option value="16">16-bit</option></select></div>
+          <div class="setting-row"><label>Ripple Mode</label><label class="toggle"><input type="checkbox" id="rippleMode"><span class="toggle-slider"></span></label></div>
+          <div class="setting-row"><label>Auto-Crossfade (ms)</label><input type="number" id="autoXfade" value="50" min="0" max="1000" step="10"></div>
+          <div class="setting-row"><label>Scroll Follows Playback</label><label class="toggle"><input type="checkbox" id="scrollFollow" checked><span class="toggle-slider"></span></label></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CHAIN DETAIL MODAL ===== -->
+    <div class="modal-overlay" id="chainModal" style="display:none">
+      <div class="modal">
+        <div class="modal-header"><h2 id="chainModalTitle">Effect Settings</h2><button class="modal-close" id="closeChainModal">✕</button></div>
+        <div class="modal-body" id="chainModalBody">
+          <!-- Dynamic controls -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TOAST ===== -->
+    <div id="toast" class="toast" style="display:none"></div>
+  </div>
+
+  <script src="js/app.js" type="module"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>

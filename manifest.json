@@ -1,0 +1,17 @@
+{
+  "name": "PodcastForge",
+  "short_name": "PodcastForge",
+  "description": "Pro podcast audio editor — clean voices, fast edits, platform-safe exports",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a1a",
+  "theme_color": "#0a0a1a",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='192' height='192' viewBox='0 0 192 192'><rect width='192' height='192' rx='48' fill='url(%23g)'/><path d='M56 72v48M80 48v96M104 66v60M128 60v72M152 78v36' stroke='white' stroke-width='14' stroke-linecap='round'/><defs><linearGradient id='g' x1='0' y1='0' x2='192' y2='192'><stop stop-color='%236C3AFF'/><stop offset='1' stop-color='%233A8AFF'/></linearGradient></defs></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
